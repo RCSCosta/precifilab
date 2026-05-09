@@ -636,6 +636,94 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+  /* ── TOOLTIPS ── */
+  .tip-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    position: relative;
+  }
+  .tip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    font-size: 9px;
+    font-weight: 700;
+    font-style: normal;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all .15s;
+    line-height: 1;
+    font-family: var(--font-body);
+    user-select: none;
+  }
+  .tip-icon:hover,
+  .tip-icon.active {
+    background: var(--accent2);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .tip-box {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: calc(100% + 8px);
+    z-index: 500;
+    width: 280px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-top: 2px solid var(--accent);
+    border-radius: 0 var(--r) var(--r) var(--r);
+    padding: 12px 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+    pointer-events: none;
+  }
+  .tip-box.open {
+    display: block;
+    pointer-events: auto;
+    animation: tipIn .15s ease;
+  }
+  /* flip to the right when label is near the left edge inside toggle rows */
+  .trow-info .tip-box { left: 0; }
+  /* flip up if near bottom */
+  .tip-box.flip-up {
+    top: auto;
+    bottom: calc(100% + 8px);
+    border-radius: var(--r) var(--r) var(--r) 0;
+    border-top: 1px solid var(--border2);
+    border-bottom: 2px solid var(--accent);
+  }
+  @keyframes tipIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .tip-box-title {
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 7px;
+  }
+  .tip-box-ex {
+    font-size: 11px;
+    color: var(--text3);
+    line-height: 1.5;
+    padding-top: 7px;
+    border-top: 1px solid var(--border);
+  }
+  .tip-box-ex strong {
+    color: var(--accent);
+    font-weight: 500;
+  }
+  /* section title tooltips sit a bit differently */
+  .section-title .tip-wrap { vertical-align: middle; }
 </style>
 </head>
 <body>
@@ -715,47 +803,45 @@
       <div class="section">
         <div class="section-header">
           <div class="section-icon">💰</div>
-          <div class="section-title">Investimento no equipamento</div>
+          <div class="section-title" data-tip="Dados sobre o valor e a forma como o equipamento foi adquirido. Esses valores determinam o custo mensal de capital que precisa ser recuperado pelo aluguel." data-ex="Analisador hematológico Mindray BC-5380 adquirido por R$ 80.000 à vista em 2023.">Investimento no equipamento</div>
         </div>
         <div class="g2">
           <div class="field">
-            <label>Valor de aquisição (R$)</label>
+            <label data-tip="O valor que você pagou pelo equipamento, ou o valor de mercado atual caso já esteja quitado. Este número representa o capital imobilizado no ativo." data-ex="Bioquímico Mindray BS-240 adquirido por R$ 120.000. Se já está quitado e em uso, use o valor pago originalmente.">Valor de aquisição (R$)</label>
             <input type="number" id="valor_eq" value="80000" min="0" oninput="calc()">
             <span class="hint">Valor pago ou valor de mercado atual, caso já quitado.</span>
           </div>
           <div class="field">
-            <label>Forma de aquisição</label>
+            <label data-tip="Se o equipamento foi pago integralmente (à vista ou já quitado), o custo de capital é calculado pela depreciação mais o custo de oportunidade do dinheiro imobilizado. Se foi parcelado, você informa o total já com juros e o sistema usa a parcela mensal como custo direto." data-ex="À vista: pagou R$ 80.000 de uma vez. Parcelado: 36x de R$ 2.800, totalizando R$ 100.800 já com juros.">Forma de aquisição</label>
             <select id="forma_aq" onchange="toggleFin(); calc()">
               <option value="avista">À vista / já quitado</option>
-              <option value="financiado">Financiado</option>
+              <option value="parcelado">Parcelado</option>
             </select>
           </div>
         </div>
-        <div class="g3 mt row-fin" id="rowfin">
+        <div class="g2 mt row-fin" id="rowfin" style="display:none">
           <div class="field">
-            <label>Taxa de juros (% a.m.)</label>
-            <input type="number" id="taxa_fin" value="1.5" step="0.1" min="0" oninput="calc()">
+            <label data-tip="Soma de todas as parcelas que você irá pagar, já incluindo juros, IOF e quaisquer encargos. Não calcule os juros aqui — informe apenas o total que sairá do seu caixa." data-ex="36 parcelas de R$ 2.800 = R$ 100.800 total. Informe R$ 100.800, não R$ 80.000.">Valor total parcelado, já com juros (R$)</label>
+            <input type="number" id="val_parcelado" value="90000" min="0" oninput="calc()">
+            <span class="hint">Informe o valor total que será pago incluindo todos os juros e encargos.</span>
           </div>
           <div class="field">
-            <label>Prazo do financiamento (meses)</label>
-            <input type="number" id="prazo_fin" value="36" min="1" oninput="calc()">
-          </div>
-          <div class="field">
-            <label>Valor de entrada (R$)</label>
-            <input type="number" id="entrada_fin" value="0" min="0" oninput="calc()">
+            <label data-tip="Quantas parcelas mensais você paga pelo equipamento. O sistema divide o valor total por esse número para chegar à parcela mensal, que se torna o custo de capital do contrato." data-ex="Parcelou em 36 vezes? Informe 36. O sistema calcula: R$ 100.800 ÷ 36 = R$ 2.800/mês de custo de capital.">Número de parcelas</label>
+            <input type="number" id="num_parcelas" value="36" min="1" oninput="calc()">
+            <span class="hint">A parcela mensal será calculada automaticamente.</span>
           </div>
         </div>
         <div class="g3 mt">
           <div class="field">
-            <label>Vida útil estimada (anos)</label>
+            <label data-tip="Estimativa de quantos anos o equipamento funcionará adequadamente antes de precisar ser substituído. Usada para calcular a depreciação anual." data-ex="Hematologistas de bancada: 7 a 10 anos. Analisadores de urina: 5 a 7 anos. Considere também o ciclo de suporte do fabricante.">Vida útil estimada (anos)</label>
             <input type="number" id="vida_util" value="7" min="1" oninput="calc()">
           </div>
           <div class="field">
-            <label>Valor residual ao final (R$)</label>
+            <label data-tip="O valor que o equipamento ainda terá ao final da vida útil, seja para revenda, peças ou sucata. Reduz a depreciação total." data-ex="Equipamento comprado por R$ 80.000 com vida útil de 7 anos pode ser vendido por R$ 5.000 ao final. Depreciação = (80.000 - 5.000) ÷ 7 = R$ 10.714/ano.">Valor residual ao final (R$)</label>
             <input type="number" id="val_res" value="5000" min="0" oninput="calc()">
           </div>
           <div class="field">
-            <label>TMA — taxa mín. de atratividade (% a.a.)</label>
+            <label data-tip="Taxa Mínima de Atratividade — o rendimento que o capital imobilizado no equipamento teria se estivesse investido em outra aplicação. Representa o custo de oportunidade do dinheiro." data-ex="Se a renda fixa rende 10% ao ano, um equipamento de R$ 80.000 tem custo de oportunidade de R$ 8.000/ano (R$ 667/mês). Esse valor precisa estar embutido no aluguel.">TMA — taxa mín. de atratividade (% a.a.)</label>
             <input type="number" id="tma" value="10" min="0" step="0.5" oninput="calc()">
             <span class="hint">Custo de oportunidade do capital imobilizado.</span>
           </div>
@@ -765,20 +851,20 @@
       <div class="section">
         <div class="section-header">
           <div class="section-icon">🏢</div>
-          <div class="section-title">Custos fixos do locador</div>
+          <div class="section-title" data-tip="Despesas que você, locador, tem independentemente do volume de uso do equipamento. São rateadas ou amortizadas no valor do aluguel." data-ex="Seguro anual do equipamento, parte do salário do time de suporte e custo do frete de instalação.">Custos fixos do locador</div>
         </div>
         <div class="g3">
           <div class="field">
-            <label>Seguro do equipamento (R$/ano)</label>
+            <label data-tip="Custo anual de seguro contra danos, roubo, incêndio ou sinistro do equipamento enquanto está instalado no cliente." data-ex="Equipamento de R$ 80.000 com apólice de R$ 1.200/ano = R$ 100/mês embutido no aluguel.">Seguro do equipamento (R$/ano)</label>
             <input type="number" id="seguro" value="1200" min="0" oninput="calc()">
           </div>
           <div class="field">
-            <label>Rateio de overhead (R$/mês)</label>
+            <label data-tip="Parte das despesas gerais da empresa (salários administrativos, sistemas de gestão, aluguel do escritório etc.) que é atribuída a este contrato específico." data-ex="Se o overhead total da empresa é R$ 6.000/mês e você tem 20 contratos ativos, o rateio é R$ 300/mês por contrato.">Rateio de overhead (R$/mês)</label>
             <input type="number" id="overhead" value="300" min="0" oninput="calc()">
             <span class="hint">Pessoal, administrativo, sistemas — rateado por contrato.</span>
           </div>
           <div class="field">
-            <label>Logística / instalação (R$ único)</label>
+            <label data-tip="Custo único de transportar, instalar e configurar o equipamento no laboratório cliente. É cobrado uma vez e diluído ao longo de todo o prazo do contrato." data-ex="Frete R$ 300 + diária do técnico instalador R$ 500 = R$ 800 total. Em contrato de 36 meses, adiciona R$ 22/mês ao custo.">Logística / instalação (R$ único)</label>
             <input type="number" id="logistica" value="800" min="0" oninput="calc()">
             <span class="hint">Amortizado ao longo do prazo do contrato.</span>
           </div>
@@ -801,11 +887,11 @@
       <div class="section">
         <div class="section-header">
           <div class="section-icon">📋</div>
-          <div class="section-title">Dados do contrato</div>
+          <div class="section-title" data-tip="Parâmetros que definem a duração, a rentabilidade esperada e as condições comerciais do contrato de aluguel." data-ex="Contrato de 36 meses com laboratório clínico, margem de 25% e reajuste anual pelo IPCA.">Dados do contrato</div>
         </div>
         <div class="g3">
           <div class="field">
-            <label>Prazo do contrato</label>
+            <label data-tip="Duração total do contrato de aluguel. Contratos mais longos permitem diluir melhor os custos fixos (logística, treinamento), reduzindo o preço mensal." data-ex="Contrato de 36 meses com um laboratório regional. O custo de instalação de R$ 800 vira R$ 22/mês — se fosse 12 meses, seria R$ 67/mês.">Prazo do contrato</label>
             <select id="prazo" onchange="calc()">
               <option value="12">12 meses</option>
               <option value="24">24 meses</option>
@@ -815,11 +901,11 @@
             </select>
           </div>
           <div class="field">
-            <label>Margem alvo (%)</label>
+            <label data-tip="O percentual de lucro bruto que você deseja obter sobre o preço de venda (não sobre o custo). Fórmula: Preço = Custo ÷ (1 − Margem%)." data-ex="Custo total R$ 2.000/mês com margem de 25%: Preço = 2.000 ÷ 0,75 = R$ 2.666/mês. O lucro de R$ 666 representa 25% de R$ 2.666.">Margem alvo (%)</label>
             <input type="number" id="margem" value="25" min="0" max="99" step="1" oninput="calc()">
           </div>
           <div class="field">
-            <label>Reajuste anual</label>
+            <label data-tip="Índice usado para corrigir o valor do aluguel a cada aniversário do contrato, protegendo contra a inflação e o aumento dos seus custos operacionais." data-ex="IPCA de 2024 foi ~4,8%. Um aluguel de R$ 2.000 reajustado por IPCA no 2º ano passa a R$ 2.096/mês.">Reajuste anual</label>
             <select id="reajuste" onchange="toggleReaj(); calc()">
               <option value="nenhum">Sem reajuste</option>
               <option value="ipca">IPCA estimado</option>
@@ -840,21 +926,21 @@
       <div class="section">
         <div class="section-header">
           <div class="section-icon">🛡</div>
-          <div class="section-title">Provisões de risco</div>
+          <div class="section-title" data-tip="Reservas financeiras para cobrir riscos previsíveis que podem ocorrer ao longo do contrato. Ignorar provisões é uma das principais causas de contratos no prejuízo." data-ex="Um contrato de R$ 2.000/mês sem provisões parece lucrativo, mas um reparo não previsto de R$ 3.000 apaga 1,5 meses de margem.">Provisões de risco</div>
         </div>
         <div class="g3">
           <div class="field">
-            <label>Inadimplência (% sobre receita)</label>
+            <label data-tip="Percentual histórico de clientes que atrasam ou deixam de pagar. Esse custo é diluído no preço de todos os contratos da carteira." data-ex="Se 3% da sua carteira não paga, para cada R$ 1.000 de receita você provisiona R$ 30. Em um contrato de R$ 2.000/mês, são R$ 60/mês embutidos.">Inadimplência (% sobre receita)</label>
             <input type="number" id="prov_inad" value="3" min="0" step="0.5" oninput="calc()">
             <span class="hint">Percentual histórico de não pagamento da carteira.</span>
           </div>
           <div class="field">
-            <label>Obsolescência (% a.a. sobre valor eq.)</label>
+            <label data-tip="Risco de o modelo do equipamento perder suporte do fabricante, ficar sem peças disponíveis ou ser superado tecnicamente durante o contrato. Provisiona uma reserva mensal sobre o valor do equipamento." data-ex="Equipamento de R$ 80.000 com 5% de obsolescência ao ano = R$ 4.000/ano = R$ 333/mês provisionados. Cobre o risco de ter que substituir antecipadamente.">Obsolescência (% a.a. sobre valor eq.)</label>
             <input type="number" id="prov_obso" value="5" min="0" step="0.5" oninput="calc()">
             <span class="hint">Risco de perda de suporte ou de mercado do modelo.</span>
           </div>
           <div class="field">
-            <label>Corretiva não planejada (R$/mês)</label>
+            <label data-tip="Reserva mensal para cobrir manutenções corretivas que acontecem fora do escopo contratado (peças, mão de obra extra, deslocamentos urgentes). Baseie no histórico de falhas do modelo — MTBF (Mean Time Between Failures)." data-ex="Se o modelo falha em média 1x por ano com custo médio de R$ 2.400 por reparo, provisione R$ 200/mês (2.400 ÷ 12).">Corretiva não planejada (R$/mês)</label>
             <input type="number" id="prov_corr" value="200" min="0" oninput="calc()">
             <span class="hint">Reparos fora do escopo contratado — baseie no MTBF do modelo.</span>
           </div>
@@ -881,12 +967,12 @@
       <div class="section">
         <div class="section-header">
           <div class="section-icon">🔧</div>
-          <div class="section-title">Manutenção</div>
+          <div class="section-title" data-tip="Serviços relacionados à conservação e reparo do equipamento. Cada item ativado representa um compromisso contratual seu como locador." data-ex="Contrato com preventiva inclusa: cliente sabe que terá 2 visitas/ano sem custo adicional — aumenta o valor percebido.">Manutenção</div>
         </div>
         <div class="toggle-list">
           <div class="trow">
             <div class="trow-info">
-              <div class="trow-name">Manutenção preventiva</div>
+              <div class="trow-name" data-tip="Visitas agendadas e periódicas para limpeza, lubrificação, verificação de parâmetros e ajustes preventivos. Reduz a chance de falhas corretivas." data-ex="2 visitas por ano, cada uma com 4h de técnico + deslocamento = R$ 400/mês amortizado. Registre em relatório de manutenção.">Manutenção preventiva</div>
               <div class="trow-sub">Visitas programadas de PM — mão de obra inclusa, peças excluídas</div>
             </div>
             <div class="trow-right">
@@ -896,7 +982,7 @@
           </div>
           <div class="trow">
             <div class="trow-info">
-              <div class="trow-name">Manutenção corretiva — mão de obra</div>
+              <div class="trow-name" data-tip="Cobertura do custo de mão de obra quando o equipamento apresenta falha ou pane. Peças podem ou não estar inclusas — configure separadamente." data-ex="Técnico se desloca para substituir sensor defeituoso. Mão de obra: R$ 250. Se peças não estão inclusas, o laboratório paga as peças à parte.">Manutenção corretiva — mão de obra</div>
               <div class="trow-sub">Cobertura de chamados por falha, peças cobradas à parte</div>
             </div>
             <div class="trow-right">
@@ -906,7 +992,7 @@
           </div>
           <div class="trow">
             <div class="trow-info">
-              <div class="trow-name">Peças e componentes inclusos</div>
+              <div class="trow-name" data-tip="Quando ativado, todas as peças de reposição necessárias em manutenções corretivas são cobertas pelo contrato, sem cobrança extra ao cliente." data-ex="Substituição de bomba de seringa (R$ 800) ou válvula solenoide (R$ 400) por conta do locador, sem custo adicional ao laboratório.">Peças e componentes inclusos</div>
               <div class="trow-sub">Cobertura total de peças de reposição no contrato</div>
             </div>
             <div class="trow-right">
@@ -920,12 +1006,12 @@
       <div class="section">
         <div class="section-header">
           <div class="section-icon">🎧</div>
-          <div class="section-title">Atendimento e suporte</div>
+          <div class="section-title" data-tip="Serviços de suporte operacional ao laboratório cliente. Impactam diretamente a satisfação e a renovação do contrato." data-ex="Laboratório com suporte remoto incluso consegue resolver 60-70% dos problemas operacionais sem necessidade de visita técnica presencial.">Atendimento e suporte</div>
         </div>
         <div class="toggle-list">
           <div class="trow">
             <div class="trow-info">
-              <div class="trow-name">Suporte técnico remoto</div>
+              <div class="trow-name" data-tip="Canal de atendimento técnico por telefone, e-mail ou acesso remoto ao equipamento para orientar operadores, ajustar configurações e resolver dúvidas." data-ex="Operador com erro no controle de qualidade liga para o suporte; técnico orienta remotamente e resolve em 20 minutos, sem necessidade de visita.">Suporte técnico remoto</div>
               <div class="trow-sub">Atendimento por telefone, e-mail ou acesso remoto ao equipamento</div>
             </div>
             <div class="trow-right">
@@ -935,7 +1021,7 @@
           </div>
           <div class="trow">
             <div class="trow-info">
-              <div class="trow-name">SLA garantido — tempo de resposta</div>
+              <div class="trow-name" data-tip="Compromisso contratual de atender dentro de um prazo máximo após o chamado, com penalidade financeira prevista em contrato caso o prazo seja descumprido. Exige provisão de risco extra." data-ex="SLA de 8h úteis: se o laboratório abrir chamado às 9h de segunda, o técnico deve estar no local até às 17h. Se não cumprir, aplica-se desconto de 10% na mensalidade.">SLA garantido — tempo de resposta</div>
               <div class="trow-sub">Provisão extra pelo risco de penalidade contratual por atraso</div>
             </div>
             <div class="trow-right">
@@ -945,7 +1031,7 @@
           </div>
           <div class="trow">
             <div class="trow-info">
-              <div class="trow-name">Equipamento reserva (backup)</div>
+              <div class="trow-name" data-tip="Disponibilização de um equipamento reserva temporário no laboratório enquanto o equipamento principal está em reparo, garantindo a continuidade das análises." data-ex="Hematologista principal em reparo: equipamento backup entregue em até 24h. Custo = depreciação + logística do equipamento reserva, dividido pelos contratos que o utilizam.">Equipamento reserva (backup)</div>
               <div class="trow-sub">Comodato temporário em caso de parada do equipamento principal</div>
             </div>
             <div class="trow-right">
@@ -959,12 +1045,12 @@
       <div class="section">
         <div class="section-header">
           <div class="section-icon">🎓</div>
-          <div class="section-title">Outros serviços</div>
+          <div class="section-title" data-tip="Serviços adicionais que agregam valor ao contrato além da manutenção e do suporte direto ao equipamento." data-ex="Laboratórios que precisam de acreditação PALC ou ISO 15189 valorizam muito a inclusão de IQ/OQ e integração LIS no contrato.">Outros serviços</div>
         </div>
         <div class="toggle-list">
           <div class="trow">
             <div class="trow-info">
-              <div class="trow-name">Treinamento de operadores</div>
+              <div class="trow-name" data-tip="Capacitação presencial ou remota da equipe do laboratório para operar corretamente o equipamento. Custo único, diluído pelo prazo do contrato." data-ex="4 horas de treinamento presencial com técnico especializado = R$ 1.500 total. Em contrato de 36 meses = R$ 41/mês embutido.">Treinamento de operadores</div>
               <div class="trow-sub">Custo total único, amortizado pelo prazo do contrato</div>
             </div>
             <div class="trow-right">
@@ -974,7 +1060,7 @@
           </div>
           <div class="trow">
             <div class="trow-info">
-              <div class="trow-name">Conectividade / integração LIS</div>
+              <div class="trow-name" data-tip="Configuração e licença de integração bidirecional do equipamento com o sistema de informação do laboratório (LIS), permitindo envio automático de resultados." data-ex="Interface HL7 entre o analisador e o sistema Labsis: técnico configura a comunicação, testa e homologa. Licença mensal de middleware de R$ 200.">Conectividade / integração LIS</div>
               <div class="trow-sub">Licença de software e configuração de interface com o sistema do laboratório</div>
             </div>
             <div class="trow-right">
@@ -984,7 +1070,7 @@
           </div>
           <div class="trow">
             <div class="trow-info">
-              <div class="trow-name">Validação / qualificação de instalação</div>
+              <div class="trow-name" data-tip="Processo formal de documentação que comprova que o equipamento foi instalado (IQ) e opera (OQ) dentro das especificações. Exigido por normas de acreditação laboratorial." data-ex="Laboratório acreditado pela PALC ou ISO 15189 precisa do protocolo IQ/OQ a cada nova instalação. Custo do serviço: R$ 2.000, diluído em 36 meses = R$ 55/mês.">Validação / qualificação de instalação</div>
               <div class="trow-sub">IQ/OQ — custo único amortizado pelo prazo do contrato</div>
             </div>
             <div class="trow-right">
@@ -1078,7 +1164,7 @@ function goTab(i) {
 
 function toggleFin() {
   const v = document.getElementById('forma_aq').value;
-  document.getElementById('rowfin').style.display = v === 'financiado' ? 'grid' : 'none';
+  document.getElementById('rowfin').style.display = v === 'parcelado' ? 'grid' : 'none';
 }
 
 function toggleReaj() {
@@ -1097,15 +1183,14 @@ function custoCapital() {
   const oport = eq * tma;
   let base;
 
-  if (document.getElementById('forma_aq').value === 'financiado') {
-    const tx = n('taxa_fin') / 100;
-    const pf = Math.max(n('prazo_fin'), 1);
-    const ent = n('entrada_fin');
-    const princ = eq - ent;
-    const parc = tx === 0 ? princ / pf : princ * (tx * Math.pow(1 + tx, pf)) / (Math.pow(1 + tx, pf) - 1);
-    const jurosAnuais = (parc * pf - princ) / (pf / 12);
-    base = (dep + jurosAnuais + seg) / 12;
+  if (document.getElementById('forma_aq').value === 'parcelado') {
+    // Usuário já informa o valor total com juros — a parcela mensal é o custo direto de capital
+    const totalParcelado = n('val_parcelado');
+    const numParcelas = Math.max(n('num_parcelas'), 1);
+    const parcela = totalParcelado / numParcelas;
+    base = parcela + seg / 12;
   } else {
+    // À vista / quitado: custo de oportunidade do capital imobilizado
     base = (dep + oport + seg) / 12;
   }
 
@@ -1317,9 +1402,71 @@ function renderResult() {
   `;
 }
 
+// ── TOOLTIP SYSTEM ──
+function buildTooltips() {
+  document.querySelectorAll('[data-tip]').forEach(el => {
+    const tipText = el.getAttribute('data-tip');
+    const exText  = el.getAttribute('data-ex');
+
+    // wrap the element's own text in a span + add icon + box
+    const originalHTML = el.innerHTML;
+    el.innerHTML = `
+      <span class="tip-wrap">
+        <span class="tip-label">${originalHTML}</span>
+        <i class="tip-icon" tabindex="0" role="button" aria-label="Ajuda">?</i>
+        <div class="tip-box">
+          <div class="tip-box-title">${tipText}</div>
+          ${exText ? `<div class="tip-box-ex"><strong>Exemplo:</strong> ${exText}</div>` : ''}
+        </div>
+      </span>`;
+
+    const icon = el.querySelector('.tip-icon');
+    const box  = el.querySelector('.tip-box');
+
+    function openTip() {
+      // close any other open tooltip
+      document.querySelectorAll('.tip-box.open').forEach(b => {
+        if (b !== box) { b.classList.remove('open'); b.previousElementSibling?.classList.remove('active'); }
+      });
+      // flip up if near bottom of viewport
+      const rect = icon.getBoundingClientRect();
+      if (rect.bottom + 180 > window.innerHeight) box.classList.add('flip-up');
+      else box.classList.remove('flip-up');
+      box.classList.toggle('open');
+      icon.classList.toggle('active', box.classList.contains('open'));
+    }
+
+    // hover (desktop)
+    el.addEventListener('mouseenter', () => {
+      const rect = icon.getBoundingClientRect();
+      if (rect.bottom + 180 > window.innerHeight) box.classList.add('flip-up');
+      else box.classList.remove('flip-up');
+      box.classList.add('open');
+      icon.classList.add('active');
+    });
+    el.addEventListener('mouseleave', () => {
+      box.classList.remove('open');
+      icon.classList.remove('active');
+    });
+
+    // click / tap (mobile & keyboard)
+    icon.addEventListener('click', e => { e.stopPropagation(); openTip(); });
+    icon.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTip(); }});
+  });
+
+  // click outside closes all
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.tip-box.open').forEach(b => {
+      b.classList.remove('open');
+      b.previousElementSibling?.classList.remove('active');
+    });
+  });
+}
+
 // Init
 document.addEventListener('DOMContentLoaded', () => {
   toggleFin();
+  buildTooltips();
   calc();
 });
 </script>
