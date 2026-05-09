@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrecifiLab — Simulador de Aluguel de Equipamentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0C0F1A;
+    --bg2: #131728;
+    --bg3: #1A2035;
+    --bg4: #212840;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --accent: #4A8CFF;
+    --accent2: #2563EB;
+    --accent-glow: rgba(74,140,255,0.15);
+    --teal: #00C9A7;
+    --amber: #F59E0B;
+    --red: #EF4444;
+    --green: #22C55E;
+    --text: #E8ECF4;
+    --text2: #8A93AD;
+    --text3: #555F7A;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'Outfit', sans-serif;
+    --r: 10px;
+    --r2: 14px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 58px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+  .logo {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px var(--accent);
+  }
+  .header-badge {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-family: var(--font-body);
+  }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  aside {
+    width: 240px;
+    flex-shrink: 0;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 0;
+    position: sticky;
+    top: 58px;
+    height: calc(100vh - 58px);
+    overflow-y: auto;
+  }
+
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 0 20px;
+    margin-bottom: 10px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 20px;
+    cursor: pointer;
+    transition: all .18s;
+    border-left: 3px solid transparent;
+    user-select: none;
+  }
+  .nav-item:hover { background: var(--bg3); }
+  .nav-item.active {
+    background: var(--accent-glow);
+    border-left-color: var(--accent);
+  }
+  .nav-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    background: var(--bg3);
+    color: var(--text2);
+    flex-shrink: 0;
+    transition: all .18s;
+  }
+  .nav-item.active .nav-icon {
+    background: var(--accent2);
+    color: #fff;
+  }
+  .nav-item.done .nav-icon {
+    background: rgba(34,197,94,0.15);
+    color: var(--green);
+  }
+  .nav-text { flex: 1; }
+  .nav-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .nav-sub {
+    font-size: 11px;
+    color: var(--text3);
+    line-height: 1.3;
+  }
+  .nav-item.active .nav-title { color: var(--accent); }
+
+  .sidebar-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 20px;
+  }
+
+  /* live mini-summary */
+  .mini-summary {
+    padding: 0 16px;
+    margin-top: 8px;
+  }
+  .mini-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 10px;
+    padding: 0 4px;
+  }
+  .mini-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    border-radius: 7px;
+    margin-bottom: 2px;
+  }
+  .mini-row:hover { background: var(--bg3); }
+  .mini-key { font-size: 11px; color: var(--text2); }
+  .mini-val { font-size: 12px; font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums; }
+  .mini-total {
+    border-top: 1px solid var(--border);
+    margin-top: 6px;
+    padding-top: 8px;
+  }
+  .mini-total .mini-key { color: var(--text); font-weight: 500; }
+  .mini-total .mini-val { color: var(--accent); font-size: 13px; }
+
+  .price-sug-mini {
+    background: var(--accent-glow);
+    border: 1px solid rgba(74,140,255,0.25);
+    border-radius: var(--r);
+    padding: 10px 12px;
+    margin: 10px 0 0;
+  }
+  .psm-label { font-size: 10px; color: var(--text2); margin-bottom: 3px; }
+  .psm-value { font-size: 20px; font-weight: 600; color: var(--accent); font-family: var(--font-head); font-variant-numeric: tabular-nums; }
+
+  /* ── MAIN ── */
+  main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 36px;
+    min-width: 0;
+  }
+
+  .panel { display: none; animation: fadeIn .25s ease; }
+  .panel.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── SECTION CARDS ── */
+  .section {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 22px 24px;
+    margin-bottom: 16px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .section-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: var(--bg4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--accent);
+  }
+  .section-title {
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .note {
+    background: rgba(74,140,255,0.08);
+    border: 1px solid rgba(74,140,255,0.2);
+    border-radius: var(--r);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #93BBFF;
+    line-height: 1.55;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .note-icon { font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+
+  /* ── GRID / FIELDS ── */
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .g4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+  .mt { margin-top: 14px; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text2);
+    letter-spacing: .02em;
+  }
+  .field input, .field select {
+    height: 38px;
+    padding: 0 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--r);
+    color: var(--text);
+    font-size: 13px;
+    font-family: var(--font-body);
+    transition: border-color .15s, background .15s;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+    background: var(--bg4);
+  }
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A93AD' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+  .field .hint {
+    font-size: 10px;
+    color: var(--text3);
+    line-height: 1.4;
+  }
+
+  /* ── TOGGLE ROWS ── */
+  .toggle-list { display: flex; flex-direction: column; }
+  .trow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+    transition: background .12s;
+  }
+  .trow:last-child { border-bottom: none; padding-bottom: 0; }
+  .trow:first-child { padding-top: 0; }
+  .trow-info { flex: 1; min-width: 0; }
+  .trow-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .trow-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+  .trow-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .cost-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 0 10px;
+    height: 34px;
+  }
+  .cost-field input {
+    width: 80px;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 13px;
+    font-family: var(--font-body);
+    text-align: right;
+    outline: none;
+    height: 100%;
+  }
+  .cost-field span {
+    font-size: 11px;
+    color: var(--text3);
+    white-space: nowrap;
+  }
+  .cost-field input:focus { color: var(--accent); }
+
+  /* switch */
+  .sw { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+  .sw input { opacity: 0; width: 0; height: 0; }
+  .sw-track {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    border-radius: 22px;
+    transition: .2s;
+  }
+  .sw-track:before {
+    content: "";
+    position: absolute;
+    height: 14px; width: 14px;
+    left: 3px; top: 3px;
+    background: var(--text3);
+    border-radius: 50%;
+    transition: .2s;
+  }
+  .sw input:checked + .sw-track { background: var(--accent2); border-color: var(--accent); }
+  .sw input:checked + .sw-track:before { transform: translateX(18px); background: #fff; }
+
+  /* ── METRICS ── */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .metric-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+  .metric-card:hover { border-color: var(--border2); }
+  .metric-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .metric-card.blue::after { background: var(--accent); }
+  .metric-card.teal::after { background: var(--teal); }
+  .metric-card.amber::after { background: var(--amber); }
+  .metric-card.green::after { background: var(--green); }
+  .metric-card.total::after { background: linear-gradient(90deg, var(--accent), var(--teal)); }
+  .m-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; font-weight: 500; letter-spacing: .02em; }
+  .m-value { font-size: 20px; font-weight: 600; font-family: var(--font-head); color: var(--text); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .m-value.blue { color: var(--accent); }
+  .m-value.teal { color: var(--teal); }
+  .m-value.amber { color: var(--amber); }
+  .m-value.green { color: var(--green); }
+  .m-sub { font-size: 10px; color: var(--text3); margin-top: 4px; }
+
+  /* ── BAR CHART ── */
+  .bar-list { display: flex; flex-direction: column; gap: 10px; }
+  .bar-item {}
+  .bar-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+  .bar-name { font-size: 12px; color: var(--text2); }
+  .bar-meta { font-size: 11px; color: var(--text3); }
+  .bar-track {
+    height: 8px;
+    background: var(--bg4);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ── PRICE RESULT ── */
+  .price-grid {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr 1px 1fr;
+    gap: 0;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--r2);
+    overflow: hidden;
+    margin-top: 16px;
+  }
+  .price-divider { background: var(--border); }
+  .price-cell {
+    padding: 20px 24px;
+    text-align: center;
+  }
+  .price-label {
+    font-size: 11px;
+    color: var(--text3);
+    margin-bottom: 8px;
+    letter-spacing: .02em;
+    font-weight: 500;
+  }
+  .price-val {
+    font-size: 26px;
+    font-weight: 700;
+    font-family: var(--font-head);
+    color: var(--text2);
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+  .price-val.main { color: var(--accent); }
+  .price-val.profit { color: var(--teal); }
+  .price-unit { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  /* margin slider */
+  .margin-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 6px;
+  }
+  .margin-row label { font-size: 12px; color: var(--text2); white-space: nowrap; min-width: 80px; }
+  .margin-row input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--bg4);
+    outline: none;
+    cursor: pointer;
+  }
+  .margin-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px rgba(74,140,255,0.5);
+    cursor: pointer;
+  }
+  .margin-badge {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 42px;
+    text-align: right;
+    font-family: var(--font-head);
+  }
+
+  /* status badge */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .02em;
+  }
+  .status-badge::before { content:''; width:6px; height:6px; border-radius:50%; display:inline-block; }
+  .sb-ok { background: rgba(34,197,94,.12); color: #4ADE80; border: 1px solid rgba(34,197,94,.2); }
+  .sb-ok::before { background: #4ADE80; }
+  .sb-warn { background: rgba(245,158,11,.12); color: #FCD34D; border: 1px solid rgba(245,158,11,.2); }
+  .sb-warn::before { background: #FCD34D; }
+  .sb-danger { background: rgba(239,68,68,.12); color: #F87171; border: 1px solid rgba(239,68,68,.2); }
+  .sb-danger::before { background: #F87171; }
+
+  /* summary highlight card */
+  .summary-card {
+    background: linear-gradient(135deg, rgba(74,140,255,0.07), rgba(0,201,167,0.05));
+    border: 1px solid rgba(74,140,255,0.2);
+    border-radius: var(--r2);
+    padding: 16px 20px;
+    margin-top: 16px;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .sc-item { }
+  .sc-label { font-size: 10px; color: var(--text3); margin-bottom: 3px; letter-spacing: .04em; font-weight: 500; text-transform: uppercase; }
+  .sc-value { font-size: 16px; font-weight: 600; color: var(--text); font-family: var(--font-head); font-variant-numeric: tabular-nums; }
+  .sc-divider { width: 1px; height: 36px; background: var(--border); align-self: center; }
+
+  /* ── NAV BUTTONS ── */
+  .panel-nav {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .btn {
+    padding: 9px 20px;
+    border-radius: var(--r);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all .15s;
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    color: var(--text2);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .btn:hover { background: var(--bg4); color: var(--text); border-color: var(--border2); }
+  .btn.primary {
+    background: var(--accent2);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn.primary:hover { background: var(--accent); }
+  .btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ── CHART CANVAS ── */
+  .chart-wrapper {
+    position: relative;
+    height: 220px;
+    width: 100%;
+  }
+
+  /* ── PAGE TITLE ── */
+  .page-title {
+    font-family: var(--font-head);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.03em;
+    margin-bottom: 4px;
+  }
+  .page-sub {
+    font-size: 13px;
+    color: var(--text3);
+    margin-bottom: 24px;
+  }
+
+  /* row fin */
+  .row-fin { display: none; }
+
+  /* print */
+  @media print {
+    header, aside, .panel-nav { display: none; }
+    .panel { display: block !important; }
+    body { background: #fff; color: #000; }
+    .section { border: 1px solid #ccc; }
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-dot"></span>
+    PrecifiLab
+  </div>
+  <span class="header-badge">Simulador de Aluguel de Equipamentos · Análises Clínicas</span>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="sidebar-label">Configuração</div>
+
+    <div class="nav-item active" onclick="goTab(0)" id="nav-0">
+      <div class="nav-icon">⚙</div>
+      <div class="nav-text">
+        <div class="nav-title">Equipamento</div>
+        <div class="nav-sub">Capital e custos fixos</div>
+      </div>
+    </div>
+    <div class="nav-item" onclick="goTab(1)" id="nav-1">
+      <div class="nav-icon">📋</div>
+      <div class="nav-text">
+        <div class="nav-title">Contrato</div>
+        <div class="nav-sub">Prazo e provisões</div>
+      </div>
+    </div>
+    <div class="nav-item" onclick="goTab(2)" id="nav-2">
+      <div class="nav-icon">🔧</div>
+      <div class="nav-text">
+        <div class="nav-title">Serviços</div>
+        <div class="nav-sub">Inclusões do contrato</div>
+      </div>
+    </div>
+    <div class="nav-item" onclick="goTab(3)" id="nav-3">
+      <div class="nav-icon">📊</div>
+      <div class="nav-text">
+        <div class="nav-title">Resultado</div>
+        <div class="nav-sub">Preço e análise</div>
+      </div>
+    </div>
+
+    <hr class="sidebar-divider">
+
+    <div class="mini-summary">
+      <div class="mini-title">Resumo em tempo real</div>
+      <div class="mini-row"><span class="mini-key">Capital/mês</span><span class="mini-val" id="s-cap">R$ —</span></div>
+      <div class="mini-row"><span class="mini-key">Serviços/mês</span><span class="mini-val" id="s-serv">R$ —</span></div>
+      <div class="mini-row"><span class="mini-key">Provisões/mês</span><span class="mini-val" id="s-prov">R$ —</span></div>
+      <div class="mini-row"><span class="mini-key">Overhead/mês</span><span class="mini-val" id="s-over">R$ —</span></div>
+      <div class="mini-row mini-total"><span class="mini-key">Custo total</span><span class="mini-val" id="s-total">R$ —</span></div>
+      <div class="price-sug-mini">
+        <div class="psm-label">Preço sugerido</div>
+        <div class="psm-value" id="s-preco">R$ —</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- PANEL 0: EQUIPAMENTO -->
+    <div class="panel active" id="panel-0">
+      <div class="page-title">Dados do Equipamento</div>
+      <div class="page-sub">Informe o valor e a forma de aquisição do equipamento para calcular o custo de capital.</div>
+
+      <div class="note">
+        <span class="note-icon">ℹ</span>
+        <span>Modelo de <strong>aluguel puro da máquina</strong>. Reagentes, consumíveis e calibradores são responsabilidade do cliente locatário — não entram no custo do locador.</span>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">💰</div>
+          <div class="section-title">Investimento no equipamento</div>
+        </div>
+        <div class="g2">
+          <div class="field">
+            <label>Valor de aquisição (R$)</label>
+            <input type="number" id="valor_eq" value="80000" min="0" oninput="calc()">
+            <span class="hint">Valor pago ou valor de mercado atual, caso já quitado.</span>
+          </div>
+          <div class="field">
+            <label>Forma de aquisição</label>
+            <select id="forma_aq" onchange="toggleFin(); calc()">
+              <option value="avista">À vista / já quitado</option>
+              <option value="financiado">Financiado</option>
+            </select>
+          </div>
+        </div>
+        <div class="g3 mt row-fin" id="rowfin">
+          <div class="field">
+            <label>Taxa de juros (% a.m.)</label>
+            <input type="number" id="taxa_fin" value="1.5" step="0.1" min="0" oninput="calc()">
+          </div>
+          <div class="field">
+            <label>Prazo do financiamento (meses)</label>
+            <input type="number" id="prazo_fin" value="36" min="1" oninput="calc()">
+          </div>
+          <div class="field">
+            <label>Valor de entrada (R$)</label>
+            <input type="number" id="entrada_fin" value="0" min="0" oninput="calc()">
+          </div>
+        </div>
+        <div class="g3 mt">
+          <div class="field">
+            <label>Vida útil estimada (anos)</label>
+            <input type="number" id="vida_util" value="7" min="1" oninput="calc()">
+          </div>
+          <div class="field">
+            <label>Valor residual ao final (R$)</label>
+            <input type="number" id="val_res" value="5000" min="0" oninput="calc()">
+          </div>
+          <div class="field">
+            <label>TMA — taxa mín. de atratividade (% a.a.)</label>
+            <input type="number" id="tma" value="10" min="0" step="0.5" oninput="calc()">
+            <span class="hint">Custo de oportunidade do capital imobilizado.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">🏢</div>
+          <div class="section-title">Custos fixos do locador</div>
+        </div>
+        <div class="g3">
+          <div class="field">
+            <label>Seguro do equipamento (R$/ano)</label>
+            <input type="number" id="seguro" value="1200" min="0" oninput="calc()">
+          </div>
+          <div class="field">
+            <label>Rateio de overhead (R$/mês)</label>
+            <input type="number" id="overhead" value="300" min="0" oninput="calc()">
+            <span class="hint">Pessoal, administrativo, sistemas — rateado por contrato.</span>
+          </div>
+          <div class="field">
+            <label>Logística / instalação (R$ único)</label>
+            <input type="number" id="logistica" value="800" min="0" oninput="calc()">
+            <span class="hint">Amortizado ao longo do prazo do contrato.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-nav">
+        <button class="btn primary" onclick="goTab(1)">
+          Próximo — Contrato
+          <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- PANEL 1: CONTRATO -->
+    <div class="panel" id="panel-1">
+      <div class="page-title">Parâmetros do Contrato</div>
+      <div class="page-sub">Defina o prazo, margem alvo e as provisões de risco do contrato.</div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">📋</div>
+          <div class="section-title">Dados do contrato</div>
+        </div>
+        <div class="g3">
+          <div class="field">
+            <label>Prazo do contrato</label>
+            <select id="prazo" onchange="calc()">
+              <option value="12">12 meses</option>
+              <option value="24">24 meses</option>
+              <option value="36" selected>36 meses</option>
+              <option value="48">48 meses</option>
+              <option value="60">60 meses</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Margem alvo (%)</label>
+            <input type="number" id="margem" value="25" min="0" max="99" step="1" oninput="calc()">
+          </div>
+          <div class="field">
+            <label>Reajuste anual</label>
+            <select id="reajuste" onchange="toggleReaj(); calc()">
+              <option value="nenhum">Sem reajuste</option>
+              <option value="ipca">IPCA estimado</option>
+              <option value="igpm">IGP-M estimado</option>
+              <option value="fixo">Percentual fixo</option>
+            </select>
+          </div>
+        </div>
+        <div class="g2 mt row-reaj" id="row-reaj" style="display:none">
+          <div class="field">
+            <label>Taxa de reajuste anual (%)</label>
+            <input type="number" id="taxa_reaj" value="5.0" min="0" step="0.1" oninput="calc()">
+            <span class="hint">Usada na projeção da receita total do contrato.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">🛡</div>
+          <div class="section-title">Provisões de risco</div>
+        </div>
+        <div class="g3">
+          <div class="field">
+            <label>Inadimplência (% sobre receita)</label>
+            <input type="number" id="prov_inad" value="3" min="0" step="0.5" oninput="calc()">
+            <span class="hint">Percentual histórico de não pagamento da carteira.</span>
+          </div>
+          <div class="field">
+            <label>Obsolescência (% a.a. sobre valor eq.)</label>
+            <input type="number" id="prov_obso" value="5" min="0" step="0.5" oninput="calc()">
+            <span class="hint">Risco de perda de suporte ou de mercado do modelo.</span>
+          </div>
+          <div class="field">
+            <label>Corretiva não planejada (R$/mês)</label>
+            <input type="number" id="prov_corr" value="200" min="0" oninput="calc()">
+            <span class="hint">Reparos fora do escopo contratado — baseie no MTBF do modelo.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-nav">
+        <button class="btn" onclick="goTab(0)">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          Anterior
+        </button>
+        <button class="btn primary" onclick="goTab(2)">
+          Próximo — Serviços
+          <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- PANEL 2: SERVIÇOS -->
+    <div class="panel" id="panel-2">
+      <div class="page-title">Serviços Inclusos</div>
+      <div class="page-sub">Ative somente os serviços que você, locador, se compromete a entregar. Cada item soma ao custo mensal.</div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">🔧</div>
+          <div class="section-title">Manutenção</div>
+        </div>
+        <div class="toggle-list">
+          <div class="trow">
+            <div class="trow-info">
+              <div class="trow-name">Manutenção preventiva</div>
+              <div class="trow-sub">Visitas programadas de PM — mão de obra inclusa, peças excluídas</div>
+            </div>
+            <div class="trow-right">
+              <div class="cost-field"><input type="number" id="v_prev" value="400" min="0" oninput="calc()"><span>R$/mês</span></div>
+              <label class="sw"><input type="checkbox" id="t_prev" checked onchange="calc()"><span class="sw-track"></span></label>
+            </div>
+          </div>
+          <div class="trow">
+            <div class="trow-info">
+              <div class="trow-name">Manutenção corretiva — mão de obra</div>
+              <div class="trow-sub">Cobertura de chamados por falha, peças cobradas à parte</div>
+            </div>
+            <div class="trow-right">
+              <div class="cost-field"><input type="number" id="v_corr" value="500" min="0" oninput="calc()"><span>R$/mês</span></div>
+              <label class="sw"><input type="checkbox" id="t_corr" onchange="calc()"><span class="sw-track"></span></label>
+            </div>
+          </div>
+          <div class="trow">
+            <div class="trow-info">
+              <div class="trow-name">Peças e componentes inclusos</div>
+              <div class="trow-sub">Cobertura total de peças de reposição no contrato</div>
+            </div>
+            <div class="trow-right">
+              <div class="cost-field"><input type="number" id="v_pecas" value="350" min="0" oninput="calc()"><span>R$/mês</span></div>
+              <label class="sw"><input type="checkbox" id="t_pecas" onchange="calc()"><span class="sw-track"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">🎧</div>
+          <div class="section-title">Atendimento e suporte</div>
+        </div>
+        <div class="toggle-list">
+          <div class="trow">
+            <div class="trow-info">
+              <div class="trow-name">Suporte técnico remoto</div>
+              <div class="trow-sub">Atendimento por telefone, e-mail ou acesso remoto ao equipamento</div>
+            </div>
+            <div class="trow-right">
+              <div class="cost-field"><input type="number" id="v_sup" value="150" min="0" oninput="calc()"><span>R$/mês</span></div>
+              <label class="sw"><input type="checkbox" id="t_sup" checked onchange="calc()"><span class="sw-track"></span></label>
+            </div>
+          </div>
+          <div class="trow">
+            <div class="trow-info">
+              <div class="trow-name">SLA garantido — tempo de resposta</div>
+              <div class="trow-sub">Provisão extra pelo risco de penalidade contratual por atraso</div>
+            </div>
+            <div class="trow-right">
+              <div class="cost-field"><input type="number" id="v_sla" value="250" min="0" oninput="calc()"><span>R$/mês</span></div>
+              <label class="sw"><input type="checkbox" id="t_sla" onchange="calc()"><span class="sw-track"></span></label>
+            </div>
+          </div>
+          <div class="trow">
+            <div class="trow-info">
+              <div class="trow-name">Equipamento reserva (backup)</div>
+              <div class="trow-sub">Comodato temporário em caso de parada do equipamento principal</div>
+            </div>
+            <div class="trow-right">
+              <div class="cost-field"><input type="number" id="v_bkp" value="500" min="0" oninput="calc()"><span>R$/mês</span></div>
+              <label class="sw"><input type="checkbox" id="t_bkp" onchange="calc()"><span class="sw-track"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">🎓</div>
+          <div class="section-title">Outros serviços</div>
+        </div>
+        <div class="toggle-list">
+          <div class="trow">
+            <div class="trow-info">
+              <div class="trow-name">Treinamento de operadores</div>
+              <div class="trow-sub">Custo total único, amortizado pelo prazo do contrato</div>
+            </div>
+            <div class="trow-right">
+              <div class="cost-field"><input type="number" id="v_trein" value="1500" min="0" oninput="calc()"><span>R$ total</span></div>
+              <label class="sw"><input type="checkbox" id="t_trein" onchange="calc()"><span class="sw-track"></span></label>
+            </div>
+          </div>
+          <div class="trow">
+            <div class="trow-info">
+              <div class="trow-name">Conectividade / integração LIS</div>
+              <div class="trow-sub">Licença de software e configuração de interface com o sistema do laboratório</div>
+            </div>
+            <div class="trow-right">
+              <div class="cost-field"><input type="number" id="v_lis" value="200" min="0" oninput="calc()"><span>R$/mês</span></div>
+              <label class="sw"><input type="checkbox" id="t_lis" onchange="calc()"><span class="sw-track"></span></label>
+            </div>
+          </div>
+          <div class="trow">
+            <div class="trow-info">
+              <div class="trow-name">Validação / qualificação de instalação</div>
+              <div class="trow-sub">IQ/OQ — custo único amortizado pelo prazo do contrato</div>
+            </div>
+            <div class="trow-right">
+              <div class="cost-field"><input type="number" id="v_valid" value="2000" min="0" oninput="calc()"><span>R$ total</span></div>
+              <label class="sw"><input type="checkbox" id="t_valid" onchange="calc()"><span class="sw-track"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-nav">
+        <button class="btn" onclick="goTab(1)">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          Anterior
+        </button>
+        <button class="btn primary" onclick="goTab(3)">
+          Ver resultado
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- PANEL 3: RESULTADO -->
+    <div class="panel" id="panel-3">
+      <div class="page-title">Resultado da Precificação</div>
+      <div class="page-sub">Análise completa do custo e sugestão de preço de aluguel mensal.</div>
+
+      <div class="metrics-grid" id="met-grid"></div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+        <div class="section" style="margin-bottom:0">
+          <div class="section-header">
+            <div class="section-icon">📊</div>
+            <div class="section-title">Composição do custo</div>
+          </div>
+          <div id="bar-list" class="bar-list"></div>
+        </div>
+        <div class="section" style="margin-bottom:0">
+          <div class="section-header">
+            <div class="section-icon">🍩</div>
+            <div class="section-title">Distribuição proporcional</div>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="donut-chart" role="img" aria-label="Gráfico de composição percentual dos custos do contrato"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">💵</div>
+          <div class="section-title">Precificação final</div>
+        </div>
+        <div class="margin-row">
+          <label>Margem alvo</label>
+          <input type="range" id="mslider" min="0" max="60" step="1" value="25" oninput="syncMargem(this.value)">
+          <span class="margin-badge" id="mdisp">25%</span>
+        </div>
+        <div class="price-grid" id="price-grid"></div>
+        <div id="summary-card"></div>
+      </div>
+
+      <div class="panel-nav">
+        <button class="btn" onclick="goTab(2)">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          Ajustar serviços
+        </button>
+        <button class="btn" onclick="window.print()">
+          <svg viewBox="0 0 24 24"><polypath points="6 9 6 2 18 2 18 9"></polypath><rect x="6" y="14" width="12" height="8"></rect><rect x="2" y="9" width="20" height="5" rx="2"></rect></svg>
+          Imprimir
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+let curTab = 0;
+let donutChart = null;
+
+function goTab(i) {
+  curTab = i;
+  document.querySelectorAll('.panel').forEach((p, j) => p.classList.toggle('active', j === i));
+  document.querySelectorAll('[id^="nav-"]').forEach((n, j) => {
+    n.classList.toggle('active', j === i);
+    if (j < i) n.classList.add('done'); else n.classList.remove('done');
+  });
+  if (i === 3) renderResult();
+}
+
+function toggleFin() {
+  const v = document.getElementById('forma_aq').value;
+  document.getElementById('rowfin').style.display = v === 'financiado' ? 'grid' : 'none';
+}
+
+function toggleReaj() {
+  const v = document.getElementById('reajuste').value;
+  document.getElementById('row-reaj').style.display = v !== 'nenhum' ? 'grid' : 'none';
+}
+
+function n(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function ck(id) { return document.getElementById(id).checked; }
+
+function custoCapital() {
+  const eq = n('valor_eq'), vida = Math.max(n('vida_util'), 1), res = n('val_res');
+  const tma = n('tma') / 100, seg = n('seguro'), log = n('logistica');
+  const prazo = Math.max(n('prazo'), 1);
+  const dep = (eq - res) / vida;
+  const oport = eq * tma;
+  let base;
+
+  if (document.getElementById('forma_aq').value === 'financiado') {
+    const tx = n('taxa_fin') / 100;
+    const pf = Math.max(n('prazo_fin'), 1);
+    const ent = n('entrada_fin');
+    const princ = eq - ent;
+    const parc = tx === 0 ? princ / pf : princ * (tx * Math.pow(1 + tx, pf)) / (Math.pow(1 + tx, pf) - 1);
+    const jurosAnuais = (parc * pf - princ) / (pf / 12);
+    base = (dep + jurosAnuais + seg) / 12;
+  } else {
+    base = (dep + oport + seg) / 12;
+  }
+
+  return base + log / prazo;
+}
+
+function custoServico() {
+  const prazo = Math.max(n('prazo'), 1);
+  let t = 0;
+  if (ck('t_prev')) t += n('v_prev');
+  if (ck('t_corr')) t += n('v_corr');
+  if (ck('t_pecas')) t += n('v_pecas');
+  if (ck('t_sup')) t += n('v_sup');
+  if (ck('t_sla')) t += n('v_sla');
+  if (ck('t_bkp')) t += n('v_bkp');
+  if (ck('t_trein')) t += n('v_trein') / prazo;
+  if (ck('t_lis')) t += n('v_lis');
+  if (ck('t_valid')) t += n('v_valid') / prazo;
+  return t;
+}
+
+function custoProvisoes() {
+  const eq = n('valor_eq');
+  return (eq * n('prov_obso') / 100 / 12) + n('prov_corr');
+}
+
+function getAll() {
+  const cap = custoCapital();
+  const serv = custoServico();
+  const prov = custoProvisoes();
+  const over = n('overhead');
+  const sub = cap + serv + prov + over;
+  const pinad = n('prov_inad') / 100;
+  const totalCusto = sub / (1 - pinad);
+  const marg = n('margem') / 100;
+  const precoMin = totalCusto;
+  const precoSug = marg >= 1 ? totalCusto * 10 : totalCusto / (1 - marg);
+  return { cap, serv, prov, over, totalCusto, precoMin, precoSug, margemR: precoSug - totalCusto };
+}
+
+function fmt(v) {
+  return 'R$ ' + Math.round(v).toLocaleString('pt-BR');
+}
+function fmt2(v) {
+  return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function calc() {
+  const d = getAll();
+  document.getElementById('s-cap').textContent = fmt(d.cap);
+  document.getElementById('s-serv').textContent = fmt(d.serv);
+  document.getElementById('s-prov').textContent = fmt(d.prov + d.over);
+  document.getElementById('s-over').textContent = fmt(d.over);
+  document.getElementById('s-total').textContent = fmt(d.totalCusto);
+  document.getElementById('s-preco').textContent = fmt2(d.precoSug);
+  if (curTab === 3) renderResult();
+}
+
+function syncMargem(v) {
+  document.getElementById('margem').value = v;
+  document.getElementById('mdisp').textContent = v + '%';
+  renderResult();
+}
+
+function renderResult() {
+  const d = getAll();
+  const mp = n('margem');
+  document.getElementById('mslider').value = mp;
+  document.getElementById('mdisp').textContent = mp + '%';
+
+  // Metric cards
+  document.getElementById('met-grid').innerHTML = `
+    <div class="metric-card blue">
+      <div class="m-label">Capital / mês</div>
+      <div class="m-value blue">${fmt(d.cap)}</div>
+      <div class="m-sub">Depreciação + custo de oportunidade</div>
+    </div>
+    <div class="metric-card amber">
+      <div class="m-label">Serviços / mês</div>
+      <div class="m-value amber">${fmt(d.serv)}</div>
+      <div class="m-sub">Manutenção, suporte e outros</div>
+    </div>
+    <div class="metric-card" style="--color:var(--amber)">
+      <div class="m-label">Provisões / mês</div>
+      <div class="m-value" style="color:#F59E0B">${fmt(d.prov + d.over)}</div>
+      <div class="m-sub">Risco, obsolescência e overhead</div>
+    </div>
+    <div class="metric-card total">
+      <div class="m-label">Custo total / mês</div>
+      <div class="m-value blue">${fmt(d.totalCusto)}</div>
+      <div class="m-sub">Break-even do contrato</div>
+    </div>
+  `;
+  document.querySelector('.metric-card.amber::after');
+
+  // Bar chart
+  const itens = [
+    { n: 'Capital (deprec. + oportunidade)', v: d.cap, c: '#4A8CFF' },
+    { n: 'Serviços técnicos contratados', v: d.serv, c: '#F59E0B' },
+    { n: 'Provisões de risco', v: d.prov, c: '#EF4444' },
+    { n: 'Overhead e custos fixos', v: d.over, c: '#6B7280' },
+  ];
+  const mx = Math.max(...itens.map(i => i.v), 1);
+  document.getElementById('bar-list').innerHTML = itens.map(it => {
+    const pct = (it.v / mx * 100).toFixed(1);
+    const ptot = d.totalCusto > 0 ? (it.v / d.totalCusto * 100).toFixed(0) : 0;
+    return `<div class="bar-item">
+      <div class="bar-header">
+        <span class="bar-name">${it.n}</span>
+        <span class="bar-meta">${fmt(it.v)} &nbsp;<span style="color:var(--text3)">${ptot}%</span></span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${it.c}"></div></div>
+    </div>`;
+  }).join('');
+
+  // Donut chart
+  if (donutChart) { donutChart.destroy(); donutChart = null; }
+  const ctx = document.getElementById('donut-chart').getContext('2d');
+  const vals = itens.map(i => Math.max(i.v, 0));
+  donutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: itens.map(i => i.n),
+      datasets: [{
+        data: vals,
+        backgroundColor: itens.map(i => i.c + 'CC'),
+        borderColor: itens.map(i => i.c),
+        borderWidth: 1.5,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const val = ctx.parsed;
+              const pct = d.totalCusto > 0 ? (val / d.totalCusto * 100).toFixed(1) : 0;
+              return ` R$ ${Math.round(val).toLocaleString('pt-BR')} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Price grid
+  document.getElementById('price-grid').innerHTML = `
+    <div class="price-cell">
+      <div class="price-label">Break-even (mínimo)</div>
+      <div class="price-val">${fmt2(d.precoMin)}</div>
+      <div class="price-unit">menor valor viável / mês</div>
+    </div>
+    <div class="price-divider"></div>
+    <div class="price-cell">
+      <div class="price-label">Preço sugerido (${mp}% de margem)</div>
+      <div class="price-val main">${fmt2(d.precoSug)}</div>
+      <div class="price-unit">valor recomendado / mês</div>
+    </div>
+    <div class="price-divider"></div>
+    <div class="price-cell">
+      <div class="price-label">Margem em R$</div>
+      <div class="price-val profit">${fmt2(d.margemR)}</div>
+      <div class="price-unit">lucro bruto / mês</div>
+    </div>
+  `;
+
+  // Summary card
+  const prazo = n('prazo');
+  const recTot = d.precoSug * prazo;
+  const cTot = d.totalCusto * prazo;
+  const lucTot = recTot - cTot;
+  const custoDia = (d.totalCusto / 30);
+  let sbClass = 'sb-ok', sbLabel = 'Margem saudável';
+  if (mp < 10) { sbClass = 'sb-danger'; sbLabel = 'Margem crítica'; }
+  else if (mp < 18) { sbClass = 'sb-warn'; sbLabel = 'Margem apertada'; }
+
+  document.getElementById('summary-card').innerHTML = `
+    <div class="summary-card">
+      <div class="sc-item">
+        <div class="sc-label">Status</div>
+        <div class="sc-value"><span class="status-badge ${sbClass}">${sbLabel}</span></div>
+      </div>
+      <div class="sc-divider"></div>
+      <div class="sc-item">
+        <div class="sc-label">Receita total (${prazo} meses)</div>
+        <div class="sc-value">${fmt2(recTot)}</div>
+      </div>
+      <div class="sc-divider"></div>
+      <div class="sc-item">
+        <div class="sc-label">Custo total acumulado</div>
+        <div class="sc-value">${fmt2(cTot)}</div>
+      </div>
+      <div class="sc-divider"></div>
+      <div class="sc-item">
+        <div class="sc-label">Lucro bruto total</div>
+        <div class="sc-value" style="color:var(--teal)">${fmt2(lucTot)}</div>
+      </div>
+      <div class="sc-divider"></div>
+      <div class="sc-item">
+        <div class="sc-label">Custo diário alocado</div>
+        <div class="sc-value">${fmt2(custoDia)}</div>
+      </div>
+    </div>
+  `;
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  toggleFin();
+  calc();
+});
+</script>
+</body>
+</html>
